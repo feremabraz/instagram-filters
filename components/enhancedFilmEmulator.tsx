@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect } from 'react';
+import { useAtom, useAtomValue } from 'jotai';
 import { motion } from 'motion/react';
 import { Slider } from '@/components/ui/slider';
 import { Card, CardContent } from '@/components/ui/card';
@@ -13,43 +14,24 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { applyFilmEffects, type EffectSettings } from '../utils/filmEffects';
-
-const defaultSettings: EffectSettings = {
-  grain: 0,
-  vignette: 0,
-  lightLeak: 0,
-  brightness: 0,
-  contrast: 0,
-  temperature: 6500,
-  vibrance: 0,
-};
-
-const presets: Record<string, EffectSettings> = {
-  None: defaultSettings,
-  '31337 Color 200': {
-    grain: 0.1,
-    vignette: 0.1,
-    lightLeak: 0.05,
-    brightness: 0.05,
-    contrast: 0.1,
-    temperature: 6700,
-    vibrance: 0.2,
-  },
-  'Superior X-tra 800': {
-    grain: 0.1,
-    vignette: 0.2,
-    lightLeak: 0.1,
-    brightness: -0.05,
-    contrast: 0.2,
-    temperature: 6300,
-    vibrance: 0.3,
-  },
-};
+import {
+  settingsAtom,
+  selectedPresetAtom,
+  imageUrlAtom,
+  presets,
+  applyPresetAtom,
+  updateSettingAtom,
+  isCustomPresetAtom,
+} from '../atoms/filterAtoms';
 
 export default function EnhancedFilmEmulator() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [settings, setSettings] = useState<EffectSettings>(defaultSettings);
-  const [selectedPreset, setSelectedPreset] = useState('None');
+  const [settings] = useAtom(settingsAtom);
+  const [selectedPreset] = useAtom(selectedPresetAtom);
+  const imageUrl = useAtomValue(imageUrlAtom);
+  const isCustomPreset = useAtomValue(isCustomPresetAtom);
+  const [, applyPreset] = useAtom(applyPresetAtom);
+  const [, updateSetting] = useAtom(updateSettingAtom);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -58,14 +40,14 @@ export default function EnhancedFilmEmulator() {
 
     const img = new Image();
     img.crossOrigin = 'anonymous';
-    img.src = 'https://images.unsplash.com/photo-1512813498716-3e640fed3f39?q=80&w=600';
+    img.src = imageUrl;
 
     img.onload = () => {
       canvas.width = img.width;
       canvas.height = img.height;
       applyEffects();
     };
-  }, []);
+  }, [imageUrl]);
 
   const applyEffects = React.useCallback(() => {
     const canvas = canvasRef.current;
@@ -74,26 +56,24 @@ export default function EnhancedFilmEmulator() {
 
     const img = new Image();
     img.crossOrigin = 'anonymous';
-    img.src = 'https://images.unsplash.com/photo-1512813498716-3e640fed3f39?q=80&w=600';
+    img.src = imageUrl;
 
     img.onload = () => {
       ctx.drawImage(img, 0, 0);
       applyFilmEffects(ctx, canvas.width, canvas.height, settings);
     };
-  }, [settings]);
+  }, [settings, imageUrl]);
 
   useEffect(() => {
     applyEffects();
   }, [applyEffects]);
 
   const handleSettingChange = (setting: keyof EffectSettings, value: number) => {
-    setSettings((prev) => ({ ...prev, [setting]: value }));
-    setSelectedPreset('Custom');
+    updateSetting({ setting, value });
   };
 
   const handlePresetChange = (preset: string) => {
-    setSelectedPreset(preset);
-    setSettings(presets[preset]);
+    applyPreset(preset);
   };
 
   return (
@@ -120,7 +100,7 @@ export default function EnhancedFilmEmulator() {
                   {preset}
                 </SelectItem>
               ))}
-              {selectedPreset === 'Custom' && <SelectItem value="Custom">Custom</SelectItem>}
+              {isCustomPreset && <SelectItem value="Custom">Custom</SelectItem>}
             </SelectContent>
           </Select>
         </div>

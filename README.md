@@ -17,6 +17,7 @@ Apply vintage film effects, grain, vignette, light leaks, and color adjustments 
   - Vibrance
 - Modern UI with shadcn/ui components
 - Smooth animations with Motion
+- Jotai state management
 
 ## Tech Stack
 
