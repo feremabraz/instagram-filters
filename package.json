@@ -20,7 +20,7 @@
     "jotai": "^2.12.4",
     "lucide-react": "^0.508.0",
     "motion": "^12.10.1",
-    "next": "15.3.2",
+    "next": "15.3.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "simplex-noise": "^4.0.3",
